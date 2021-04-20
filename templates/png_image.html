@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% block title %}
-    list Page
+    PNG ref Page
 {% endblock %}
 {% block content %}
     <h1>Image png of the scene {{ name_scene }}</h1>
-    <image src="{{ url_for('static', filename='images/{{name_scene}}.png')}}">
+    <image src="{{ url_for('static', filename= image_png)}}">
 {% endblock %}
