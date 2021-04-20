@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}
+    CSV image, statistique
+{% endblock %}
+{% block content %}
+    <p>scene : {{ name_scene }} on coordinate {{ coordinate }}</p>
+    <p>nb samples : {{ nb_samples }}</p>
+    <p>mean_R = {{mean_R}}</p>
+    <p> mean_G = {{mean_G}}</p>
+    <p>mean_B = {{mean_B}}</p>
+    <p>median_R = {{median_R}}</p>
+    <p>median_G = {{median_G}}</p>
+    <p>median_B = {{median_B}}</p>
+    <p>median_high_R = {{median_high_R}}</p>
+    <p>median_high_G = {{median_high_G}}</p>
+    <p>median_high_B = {{median_high_B}}</p>
+    <p>median_low_R = {{median_low_R}}</p>
+    <p>median_low_G = {{median_low_G}}</p>
+    <p>median_low_B = {{median_low_B}}</p>
+{% endblock %}
