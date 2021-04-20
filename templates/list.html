@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}
+    list Page
+{% endblock %}
+{% block content %}
+    <h1>List of rawls folders</h1>
+    <p>
+        <ul>
+            {% for element in scenes %}
+                <li>{{ element }} </li>
+            {% endfor %}
+        </ul>
+    </p>
+{% endblock %}
