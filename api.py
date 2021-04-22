@@ -4,10 +4,12 @@ import os,sys
 import csv
 import statistics
 
-from rawls.rawls import Rawls
-sys.path.insert(0, os.path.abspath('../../rawls/rawls'))
-from rawls.utils import create_CSV, create_CSV_zone
 from flask import Flask, render_template, jsonify, request, redirect, url_for
+sys.path.insert(0, os.path.abspath('../../rawls/rawls'))
+from rawls.rawls import Rawls
+from rawls.utils import create_CSV, create_CSV_zone
+
+app = flask.Flask(__name__)
 
 def stat_csv(tab):
     tab_R = []
@@ -33,11 +35,10 @@ def stat_csv(tab):
 
 def csv_footer(name_scene,tab,CSV_file,nb_samples,x,y,x2=None,y2=None):
     res = stat_csv(tab)
-    print("CSV FILE AAAAAAAAAAAAAAAAAAAA ",CSV_file)
-    # os.remove(CSV_file)
+    os.remove(CSV_file)
     format = request.args.get('format')
     if((x2 != None) and (y2 != None)):
-        coordinate = "("+str(x)+","+str(y)+") to ("+str(x1)+","+str(y2)+")"
+        coordinate = "("+str(x)+","+str(y)+") to ("+str(x2)+","+str(y2)+")"
     else :
         coordinate = "("+str(x)+","+str(y)+")"
     if format == "json":
@@ -73,13 +74,6 @@ def csv_footer(name_scene,tab,CSV_file,nb_samples,x,y,x2=None,y2=None):
         median_low_R = res[9],
         median_low_G = res[10],
         median_low_B = res[11])
-app = flask.Flask(__name__)
-
-with open('./config.json', 'r') as f:
-	config = json.load(f)
-folder_rawls_path = config['path']
-scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
-errors = ["ERROR : Your name of the scene doesn't exist"]
 
 @app.route("/home")
 @app.route("/")
@@ -115,9 +109,13 @@ def png(name_scene=None):
 def pixel_CSV_stat(name_scene=None, x=0, y=0, nb_samples=-1):
     if name_scene not in scene_list:
         return render_template("error.html", error = errors[0])
+    # ici
     create_CSV(folder_rawls_path + "/" + name_scene,x,y,folder_rawls_path,nb_samples)
     if nb_samples == -1:
-        nb_samples = len([name for name in os.listdir(folder_rawls_path + "/" + name_scene)])
+        nb_samples = 0
+        for name in os.listdir(folder_rawls_path + "/" + name_scene):
+            if name.endswith(".rawls"):
+                nb_samples += 1
     CSV_file = folder_rawls_path + "/" + name_scene + "_" + str(x) + "_" + str(y) + ".csv"
     with open(CSV_file, newline='') as csvfile:
         spamreader = csv.reader(csvfile, delimiter=',')
@@ -130,6 +128,41 @@ def pixel_CSV_stat(name_scene=None, x=0, y=0, nb_samples=-1):
                 tab.append([data1,data2,data3])
     return csv_footer(name_scene,tab,CSV_file,nb_samples,x,y)
 
+@app.route("/<name_scene>/<int:x1>-<int:x2>/<int:y1>-<int:y2>")
+@app.route("/<name_scene>/<int:x1>-<int:x2>/<int:y1>-<int:y2>/<int:nb_samples>")
+def area_CSV_stat(name_scene=None, x1=0, y1=0,x2=1,y2=0, nb_samples=-1):
+
+    pwd = os.getcwd()
+    if name_scene not in scene_list:
+        return render_template("error.html", error = errors[0])
+    create_CSV_zone(folder_rawls_path + "/" + name_scene,x1,y1,x2,y2,folder_rawls_path,nb_samples)
+    os.chdir(pwd)
+    if nb_samples == -1:
+        nb_samples = 0
+        for name in os.listdir(folder_rawls_path + "/" + name_scene):
+            if name.endswith(".rawls"):
+                nb_samples += 1
+    CSV_file = folder_rawls_path + "/" + name_scene + "_" + str(x1) + "_" + str(y1) + "_to_" + str(x2) + "_" + str(y2) + ".csv"
+    with open(CSV_file, newline='') as csvfile:
+        spamreader = csv.reader(csvfile, delimiter=',')
+        tab = []
+        for index,row in enumerate(spamreader):
+            if index != 0:
+                a,b,c = 0,1,2
+                while(c<=((x2-x1+1)*(y2-y1+1)*3)):
+                    data1 = float(row[a])
+                    data2 = float(row[b])
+                    data3 = float(row[c])
+                    tab.append([data1,data2,data3])
+                    a += 3
+                    b += 3
+                    c += 3
+    return csv_footer(name_scene,tab,CSV_file,nb_samples,x1,y1,x2,y2)
 
 if __name__ == "__main__":
+    with open('./config.json', 'r') as f:
+        config = json.load(f)
+    folder_rawls_path = config['path']
+    scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
+    errors = ["ERROR : Your name of the scene doesn't exist"]
     app.run(debug=True)
