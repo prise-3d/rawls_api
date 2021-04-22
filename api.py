@@ -1,13 +1,78 @@
 import flask
 import json
-import os
+import os,sys
 import csv
 import statistics
 
 from rawls.rawls import Rawls
-from rawls.utils import create_CSV
+sys.path.insert(0, os.path.abspath('../../rawls/rawls'))
+from rawls.utils import create_CSV, create_CSV_zone
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 
+def stat_csv(tab):
+    tab_R = []
+    tab_G = []
+    tab_B = []
+    for i in range(len(tab[0])):
+        tab_R.append(tab[i][0])
+        tab_G.append(tab[i][1])
+        tab_B.append(tab[i][2])
+    mean_R = statistics.mean(tab_R)
+    mean_G = statistics.mean(tab_G)
+    mean_B = statistics.mean(tab_B)
+    median_R = statistics.median(tab_R)
+    median_G = statistics.median(tab_G)
+    median_B = statistics.median(tab_B)
+    median_high_R = statistics.median_high(tab_R)
+    median_high_G = statistics.median_high(tab_G)
+    median_high_B = statistics.median_high(tab_B)
+    median_low_R = statistics.median_low(tab_R)
+    median_low_G = statistics.median_low(tab_G)
+    median_low_B = statistics.median_low(tab_B)
+    return mean_R,mean_G, mean_B, median_R, median_G, median_B, median_high_R, median_high_G, median_high_B, median_low_R, median_low_G, median_low_B
+
+def csv_footer(name_scene,tab,CSV_file,nb_samples,x,y,x2=None,y2=None):
+    res = stat_csv(tab)
+    print("CSV FILE AAAAAAAAAAAAAAAAAAAA ",CSV_file)
+    # os.remove(CSV_file)
+    format = request.args.get('format')
+    if((x2 != None) and (y2 != None)):
+        coordinate = "("+str(x)+","+str(y)+") to ("+str(x1)+","+str(y2)+")"
+    else :
+        coordinate = "("+str(x)+","+str(y)+")"
+    if format == "json":
+        json_stat = {"name_scene" : name_scene,
+        "coordinate" : coordinate,
+        "nb_samples" : nb_samples,
+        "mean_R" : res[0],
+        "mean_G" : res[1],
+        "mean_B" : res[2],
+        "median_R" : res[3],
+        "median_G" : res[4],
+        "median_B" : res[5],
+        "median_high_R" : res[6],
+        "median_high_G" : res[7],
+        "median_high_B" : res[8],
+        "median_low_R" : res[9],
+        "median_low_G" : res[10],
+        "median_low_B" : res[11]}
+        return jsonify(json_stat)
+    return render_template("stat_csv_image.html",
+        name_scene = name_scene,
+        coordinate = coordinate,
+        nb_samples = nb_samples,
+        mean_R = res[0],
+        mean_G = res[1],
+        mean_B = res[2],
+        median_R = res[3],
+        median_G = res[4],
+        median_B = res[5],
+        median_high_R = res[6],
+        median_high_G = res[7],
+        median_high_B = res[8],
+        median_low_R = res[9],
+        median_low_G = res[10],
+        median_low_B = res[11])
 app = flask.Flask(__name__)
 
 with open('./config.json', 'r') as f:
@@ -63,43 +128,8 @@ def pixel_CSV_stat(name_scene=None, x=0, y=0, nb_samples=-1):
                 data2 = float(row[1])
                 data3 = float(row[2])
                 tab.append([data1,data2,data3])
-        tab_R = []
-        tab_G = []
-        tab_B = []
-        for i in range(len(tab[0])):
-            tab_R.append(tab[i][0])
-            tab_G.append(tab[i][1])
-            tab_B.append(tab[i][2])
-        mean_R = statistics.mean(tab_R)
-        mean_G = statistics.mean(tab_G)
-        mean_B = statistics.mean(tab_B)
-        median_R = statistics.median(tab_R)
-        median_G = statistics.median(tab_G)
-        median_B = statistics.median(tab_B)
-        median_high_R = statistics.median_high(tab_R)
-        median_high_G = statistics.median_high(tab_G)
-        median_high_B = statistics.median_high(tab_B)
-        median_low_R = statistics.median_low(tab_R)
-        median_low_G = statistics.median_low(tab_G)
-        median_low_B = statistics.median_low(tab_B)
-    os.remove(CSV_file)
-    return render_template("stat_csv_image.html",
-        name_scene = name_scene,
-        coordinate = "("+str(x)+","+str(y)+")",
-        nb_samples = nb_samples,
-        mean_R = mean_R,
-        mean_G = mean_G,
-        mean_B = mean_B,
-        median_R = median_R,
-        median_G = median_G,
-        median_B = median_B,
-        median_high_R = median_high_R,
-        median_high_G = median_high_G,
-        median_high_B = median_high_B,
-        median_low_R = median_low_R,
-        median_low_G = median_low_G,
-        median_low_B = median_low_B
-    )
+    return csv_footer(name_scene,tab,CSV_file,nb_samples,x,y)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
