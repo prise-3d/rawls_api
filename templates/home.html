@@ -4,6 +4,27 @@
 {% endblock %}
 {% block content %}
     <h1>Home Page</h1>
-    <image src="{{ url_for('static', filename='images/output.png')}}">
+    <p>
+        <label for="scene-select">Choose a scene:</label>
+
+        <select name="scenes" id="scene-select">
+            <option value="default"> --Choose a scene-- </option>
+            {% for element in scenes %}
+                {% if image == element %}
+                    <option value="{{ element }}" selected>{{ element }} </option>
+                {% else %}
+                    <option value="{{ element }}">{{ element }} </option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    </p>
+    <div id="Global">
+        <div id="gauche">
+            {% if image != None %}
+                <image src="{{ url_for('static', filename='images/output.png')}}">
+            {% endif %}
+        </div>
+        <div id="droite"> Ici le bloc de texte de droite </div>
+    </div>
     <div id='information_image'></div>
 {% endblock %}

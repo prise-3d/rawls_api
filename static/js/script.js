@@ -9,5 +9,9 @@ $(document).ready(function() {
         information = "<div id='container'><p> Point on "+click_coordinate+"</p></div>"
         $("#information_image").append(information)
     })
-    
+
+    $("#scene-select").on('change', function() {
+        var url = "http://127.0.0.1:5000/home?img="+this.value;
+        $(location).attr('href',url);
+    });
 });

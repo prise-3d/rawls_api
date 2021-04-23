@@ -7,6 +7,7 @@ import statistics
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 from rawls.rawls import Rawls
 from rawls.utils import create_CSV, create_CSV_zone
+from PIL import Image
 
 app = flask.Flask(__name__)
 
@@ -77,7 +78,12 @@ def csv_footer(name_scene,tab,CSV_file,nb_samples,x,y,x2=None,y2=None):
 @app.route("/home")
 @app.route("/")
 def home():
-    return render_template("home.html")
+    img = request.args.get('img')
+    if img in scene_list:
+        link_img = url_for(img + "/png/ref?for_home=True")
+        return render_template("home.html",scenes = scene_list, image = link_img)
+    img = None
+    return render_template("home.html",scenes = scene_list, image = img)
 
 @app.route("/list")
 def list():
@@ -101,6 +107,13 @@ def png(name_scene=None):
             break
         rawls_img = Rawls.load(folder_rawls_path + "/" + name_scene + "/" + first_file)
         rawls_img.save("static/images/" + name_scene + ".png")
+        for_home = request.args.get('True')
+        if for_home == 'True':
+            im = Image.open("static/images/" + name_scene + ".png")
+            size = (300,300)
+            im.thumbnail(size)
+            im.save("static/images/" + name_scene + "_300.png")
+            return "static/images/" + name_scene + "_300.png"
     return render_template("png_image.html",name_scene = name_scene, image_png = "images/"+name_scene+".png")
 
 @app.route("/<name_scene>/<int:x>/<int:y>")
