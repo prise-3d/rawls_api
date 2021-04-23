@@ -10,7 +10,7 @@
         <select name="scenes" id="scene-select">
             <option value="default"> --Choose a scene-- </option>
             {% for element in scenes %}
-                {% if image == element %}
+                {% if image_ref == element %}
                     <option value="{{ element }}" selected>{{ element }} </option>
                 {% else %}
                     <option value="{{ element }}">{{ element }} </option>
@@ -21,7 +21,7 @@
     <div id="Global">
         <div id="gauche">
             {% if image != None %}
-                <image src="{{ url_for('static', filename='images/output.png')}}">
+                <image src="{{ url_for('static', filename = image)}}">
             {% endif %}
         </div>
         <div id="droite"> Ici le bloc de texte de droite </div>

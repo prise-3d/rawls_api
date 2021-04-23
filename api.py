@@ -75,13 +75,29 @@ def csv_footer(name_scene,tab,CSV_file,nb_samples,x,y,x2=None,y2=None):
         median_low_G = res[10],
         median_low_B = res[11])
 
+def save_png(name_scene):
+    if not os.path.exists("static/images/" + name_scene + ".png"):
+        for f in os.listdir(folder_rawls_path + "/" + name_scene):
+            first_file = f
+            break
+        rawls_img = Rawls.load(folder_rawls_path + "/" + name_scene + "/" + first_file)
+        rawls_img.save("static/images/" + name_scene + ".png")
+
+def resize_image(name_scene):
+    save_png(name_scene)
+    im = Image.open("static/images/" + name_scene + ".png")
+    size = (300,300)
+    im.thumbnail(size)
+    im.save("static/images/" + name_scene + "_300.png")
+    return "images/" + name_scene + "_300.png"
+
 @app.route("/home")
 @app.route("/")
 def home():
     img = request.args.get('img')
     if img in scene_list:
-        link_img = url_for(img + "/png/ref?for_home=True")
-        return render_template("home.html",scenes = scene_list, image = link_img)
+        link_img = resize_image(img)
+        return render_template("home.html",scenes = scene_list,image_ref = img, image = link_img)
     img = None
     return render_template("home.html",scenes = scene_list, image = img)
 
@@ -101,19 +117,7 @@ def json_list():
 def png(name_scene=None):
     if name_scene not in scene_list:
         return render_template("error.html", error = errors[0])
-    if not os.path.exists("static/images/" + name_scene + ".png"):
-        for f in os.listdir(folder_rawls_path + "/" + name_scene):
-            first_file = f
-            break
-        rawls_img = Rawls.load(folder_rawls_path + "/" + name_scene + "/" + first_file)
-        rawls_img.save("static/images/" + name_scene + ".png")
-        for_home = request.args.get('True')
-        if for_home == 'True':
-            im = Image.open("static/images/" + name_scene + ".png")
-            size = (300,300)
-            im.thumbnail(size)
-            im.save("static/images/" + name_scene + "_300.png")
-            return "static/images/" + name_scene + "_300.png"
+    save_png(name_scene)
     return render_template("png_image.html",name_scene = name_scene, image_png = "images/"+name_scene+".png")
 
 @app.route("/<name_scene>/<int:x>/<int:y>")
