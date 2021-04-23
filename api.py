@@ -5,7 +5,6 @@ import csv
 import statistics
 
 from flask import Flask, render_template, jsonify, request, redirect, url_for
-sys.path.insert(0, os.path.abspath('../../rawls/rawls'))
 from rawls.rawls import Rawls
 from rawls.utils import create_CSV, create_CSV_zone
 
