@@ -9,6 +9,9 @@ from rawls.rawls import Rawls
 from rawls.utils import create_CSV, create_CSV_zone
 from PIL import Image
 
+sys.path.insert(0, os.path.abspath('../../MONarchy'))
+from MONarchy.Analyse import Analyse
+
 app = flask.Flask(__name__)
 
 def stat_csv(tab):
@@ -86,20 +89,81 @@ def save_png(name_scene):
 def resize_image(name_scene):
     save_png(name_scene)
     im = Image.open("static/images/" + name_scene + ".png")
+    original_image_width,original_image_height = im.size
     size = (300,300)
     im.thumbnail(size)
     im.save("static/images/" + name_scene + "_300.png")
-    return "images/" + name_scene + "_300.png"
+    img_resize = "images/" + name_scene + "_300.png"
+    res = [img_resize,original_image_width,original_image_height]
+    return res
+
+def pixel_CSV_stat_header(name_scene=None, x=0, y=0, nb_samples=-1):
+    if name_scene not in scene_list:
+        return render_template("error.html", error = errors[0])
+    create_CSV(folder_rawls_path + "/" + name_scene,x,y,folder_rawls_path,nb_samples)
+    if nb_samples == -1:
+        nb_samples = 0
+        for name in os.listdir(folder_rawls_path + "/" + name_scene):
+            if name.endswith(".rawls"):
+                nb_samples += 1
+    CSV_file = folder_rawls_path + "/" + name_scene + "_" + str(x) + "_" + str(y) + ".csv"
+    with open(CSV_file, newline='') as csvfile:
+        spamreader = csv.reader(csvfile, delimiter=',')
+        tab = []
+        for index,row in enumerate(spamreader):
+            if index != 0:
+                data1 = float(row[0])
+                data2 = float(row[1])
+                data3 = float(row[2])
+                tab.append([data1,data2,data3])
+    res = [tab,CSV_file,nb_samples]
+    return res
 
 @app.route("/home")
 @app.route("/")
 def home():
     img = request.args.get('img')
+    xCoordinate = int(request.args.get('X-coordinate'))
+    yCoordinate = int(request.args.get('Y-coordinate'))
     if img in scene_list:
-        link_img = resize_image(img)
-        return render_template("home.html",scenes = scene_list,image_ref = img, image = link_img)
-    img = None
-    return render_template("home.html",scenes = scene_list, image = img)
+        li = resize_image(img)
+        link_img = li[0]
+        original_image_width = li[1]
+        original_image_height = li[2]
+        if((xCoordinate != None)and(yCoordinate != None)):
+            li = pixel_CSV_stat_header(img,xCoordinate,yCoordinate)
+            tab = li[0]
+            nb_samples = li[2]
+            coordinate = "("+str(xCoordinate)+","+str(yCoordinate)+")"
+            res = stat_csv(tab)
+            os.remove(li[1])
+            return render_template("home.html",scenes = scene_list,image_ref = img, image = link_img,
+                original_image_width = original_image_width,original_image_height = original_image_height,
+                xCoordinate = xCoordinate,
+                yCoordinate = yCoordinate,
+                coordinate = coordinate,
+                nb_samples = nb_samples,
+                mean_R = res[0],
+                mean_G = res[1],
+                mean_B = res[2],
+                median_R = res[3],
+                median_G = res[4],
+                median_B = res[5],
+                median_high_R = res[6],
+                median_high_G = res[7],
+                median_high_B = res[8],
+                median_low_R = res[9],
+                median_low_G = res[10],
+                median_low_B = res[11])
+        xCoordinate,yCoordinate = None,None
+        return render_template("home.html",scenes = scene_list,image_ref = img, image = link_img,
+            original_image_width = original_image_width,
+            original_image_height = original_image_height,
+            xCoordinate = xCoordinate,
+            yCoordinate = yCoordinate)
+    img,xCoordinate,yCoordinate = None,None,None
+    return render_template("home.html",scenes = scene_list, image = img,xCoordinate = xCoordinate,
+        yCoordinate = yCoordinate)
 
 @app.route("/list")
 def list():
@@ -123,25 +187,10 @@ def png(name_scene=None):
 @app.route("/<name_scene>/<int:x>/<int:y>")
 @app.route("/<name_scene>/<int:x>/<int:y>/<int:nb_samples>")
 def pixel_CSV_stat(name_scene=None, x=0, y=0, nb_samples=-1):
-    if name_scene not in scene_list:
-        return render_template("error.html", error = errors[0])
-    # ici
-    create_CSV(folder_rawls_path + "/" + name_scene,x,y,folder_rawls_path,nb_samples)
-    if nb_samples == -1:
-        nb_samples = 0
-        for name in os.listdir(folder_rawls_path + "/" + name_scene):
-            if name.endswith(".rawls"):
-                nb_samples += 1
-    CSV_file = folder_rawls_path + "/" + name_scene + "_" + str(x) + "_" + str(y) + ".csv"
-    with open(CSV_file, newline='') as csvfile:
-        spamreader = csv.reader(csvfile, delimiter=',')
-        tab = []
-        for index,row in enumerate(spamreader):
-            if index != 0:
-                data1 = float(row[0])
-                data2 = float(row[1])
-                data3 = float(row[2])
-                tab.append([data1,data2,data3])
+    li = pixel_CSV_stat_header(name_scene, x, y, nb_samples)
+    tab = li[0]
+    CSV_file = li[1]
+    nb_samples = li[2]
     return csv_footer(name_scene,tab,CSV_file,nb_samples,x,y)
 
 @app.route("/<name_scene>/<int:x1>-<int:x2>/<int:y1>-<int:y2>")
@@ -174,6 +223,16 @@ def area_CSV_stat(name_scene=None, x1=0, y1=0,x2=1,y2=0, nb_samples=-1):
                     b += 3
                     c += 3
     return csv_footer(name_scene,tab,CSV_file,nb_samples,x1,y1,x2,y2)
+
+@app.route("/test")
+def test(name_scene=None):
+    # if name_scene not in scene_list:
+    #     return render_template("error.html", error = errors[0])
+    p = "/home/theo/rawls/images/p3d_bathroom-view0_200_200.csv"
+    analyse = Analyse(p)
+    print("analyse : ",analyse)
+    json_stat = analyse.info(1)
+    return json_stat
 
 if __name__ == "__main__":
     with open('./config.json', 'r') as f:

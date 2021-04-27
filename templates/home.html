@@ -21,10 +21,29 @@
     <div id="Global">
         <div id="gauche">
             {% if image != None %}
-                <image src="{{ url_for('static', filename = image)}}">
+                <div id="image"><image src="{{ url_for('static', filename = image)}}">
+                    <p>original size : ({{original_image_width}}x{{original_image_height}})</p>
+                </div>
+            {% endif %}
+            <div id='information_image'></div>
+        </div>
+        <div id="droite">
+            {% if((xCoordinate != None) and (yCoordinate != None))%}
+                <p>scene : {{ img }} on coordinate {{ coordinate }}</p>
+                <p>nb samples : {{ nb_samples }}</p>
+                <p>mean_R = {{mean_R}}</p>
+                <p> mean_G = {{mean_G}}</p>
+                <p>mean_B = {{mean_B}}</p>
+                <p>median_R = {{median_R}}</p>
+                <p>median_G = {{median_G}}</p>
+                <p>median_B = {{median_B}}</p>
+                <p>median_high_R = {{median_high_R}}</p>
+                <p>median_high_G = {{median_high_G}}</p>
+                <p>median_high_B = {{median_high_B}}</p>
+                <p>median_low_R = {{median_low_R}}</p>
+                <p>median_low_G = {{median_low_G}}</p>
+                <p>median_low_B = {{median_low_B}}</p>
             {% endif %}
         </div>
-        <div id="droite"> Ici le bloc de texte de droite </div>
     </div>
-    <div id='information_image'></div>
 {% endblock %}
