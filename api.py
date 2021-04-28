@@ -123,14 +123,16 @@ def pixel_CSV_stat_header(name_scene=None, x=0, y=0, nb_samples=-1):
 @app.route("/")
 def home():
     img = request.args.get('img')
-    xCoordinate = int(request.args.get('X-coordinate'))
-    yCoordinate = int(request.args.get('Y-coordinate'))
+    xCoordinate = request.args.get('X-coordinate')
+    yCoordinate = request.args.get('Y-coordinate')
     if img in scene_list:
         li = resize_image(img)
         link_img = li[0]
         original_image_width = li[1]
         original_image_height = li[2]
         if((xCoordinate != None)and(yCoordinate != None)):
+            xCoordinate = int(xCoordinate)
+            yCoordinate = int(yCoordinate)
             li = pixel_CSV_stat_header(img,xCoordinate,yCoordinate)
             tab = li[0]
             nb_samples = li[2]
@@ -155,13 +157,11 @@ def home():
                 median_low_R = res[9],
                 median_low_G = res[10],
                 median_low_B = res[11])
-        xCoordinate,yCoordinate = None,None
         return render_template("home.html",scenes = scene_list,image_ref = img, image = link_img,
             original_image_width = original_image_width,
             original_image_height = original_image_height,
             xCoordinate = xCoordinate,
             yCoordinate = yCoordinate)
-    img,xCoordinate,yCoordinate = None,None,None
     return render_template("home.html",scenes = scene_list, image = img,xCoordinate = xCoordinate,
         yCoordinate = yCoordinate)
 

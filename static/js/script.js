@@ -27,6 +27,9 @@ $(document).ready(function() {
 
     $("#scene-select").on('change', function() {
         var url = "http://127.0.0.1:5000/home?img="+this.value;
+        if(this.value == "default"){
+            url = "http://127.0.0.1:5000/home"
+        }
         $(location).attr('href',url);
     });
     
