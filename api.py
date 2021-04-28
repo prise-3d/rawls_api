@@ -10,6 +10,7 @@ from rawls.utils import create_CSV, create_CSV_zone
 from PIL import Image
 
 sys.path.insert(0, os.path.abspath('../../MONarchy'))
+from MONarchy.MONarchy import MONarchy
 from MONarchy.Analyse import Analyse
 
 app = flask.Flask(__name__)
@@ -230,8 +231,9 @@ def test(name_scene=None):
     #     return render_template("error.html", error = errors[0])
     p = "/home/theo/rawls/images/p3d_bathroom-view0_200_200.csv"
     analyse = Analyse(p)
-    print("analyse : ",analyse)
-    json_stat = analyse.info(1)
+    print("analyse : ",type(analyse))
+    json_stat = analyse.info("200_200_B")
+    print("json : ", json_stat)
     return json_stat
 
 if __name__ == "__main__":
