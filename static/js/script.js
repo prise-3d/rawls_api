@@ -59,7 +59,6 @@ $(document).ready(function() {
 
       $( "form" ).submit(function( event ) {
         event.preventDefault();
-        alert($(location).attr('<search>'))
         var url = "http://127.0.0.1:5000/home?img="+getUrlParameter('img')+"&X-coordinate="+$("#X-coordinate").val()+"&Y-coordinate="+$("#Y-coordinate").val();
         $(location).attr('href',url);
         
