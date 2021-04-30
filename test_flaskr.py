@@ -1,12 +1,15 @@
-  
-from flask import Flask
+from .api import app
 
-from api import home
+import os
+import tempfile
 
-def test_home():
-    app = Flask(__name__)
-    client = app.test_client()
-    url = '/'
-    response = client.get(url)
-    print(response.get_data())
-    assert response.get_data() == b'Hello, World!'
+import pytest
+
+def client():
+    print ("rien pour l'instant")
+
+def test_up():
+    response = app.test_client().get('/up')
+    assert response.status_code == 200
+    assert b'ok' in response.data
+   

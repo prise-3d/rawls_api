@@ -71,6 +71,16 @@ def pixel_CSV_stat_header(name_scene=None, x=0, y=0, nb_samples=-1):
     res = [CSV_file,nb_samples]
     return res
 
+@app.route("/up")  
+def up():
+    """
+    Just for test if API is up
+
+    Returns :
+    {string} -- ok if API is up
+    """
+    return "ok"
+
 @app.route("/home")
 @app.route("/")
 def home():
