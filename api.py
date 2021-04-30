@@ -2,7 +2,6 @@ import flask
 import json
 import os,sys
 import csv
-import statistics
 
 from flask import Flask, render_template, jsonify, request, redirect, url_for
 from rawls.rawls import Rawls
@@ -15,6 +14,9 @@ from MONarchy.Analyse import Analyse
 app = flask.Flask(__name__)
 
 def csv_footer(name_scene,tab,CSV_file,nb_samples,x,y,x2=None,y2=None):
+    """
+    remove the csv file and generate statistiques of this file
+    """
     os.remove(CSV_file)
     if((x2 != None) and (y2 != None)):
         coordinate = "("+str(x)+","+str(y)+") to ("+str(x2)+","+str(y2)+")"
@@ -29,6 +31,9 @@ def csv_footer(name_scene,tab,CSV_file,nb_samples,x,y,x2=None,y2=None):
         json_stat = json_stat)
 
 def save_png(name_scene):
+    """
+    save a png image from a rawls repertory
+    """
     if not os.path.exists("static/images/" + name_scene + ".png"):
         for f in os.listdir(folder_rawls_path + "/" + name_scene):
             first_file = f
@@ -37,6 +42,9 @@ def save_png(name_scene):
         rawls_img.save("static/images/" + name_scene + ".png")
 
 def resize_image(name_scene):
+    """
+    save a png image with size (300,300) from a rawls repertory for display in website
+    """
     save_png(name_scene)
     im = Image.open("static/images/" + name_scene + ".png")
     original_image_width,original_image_height = im.size
@@ -48,6 +56,9 @@ def resize_image(name_scene):
     return res
 
 def pixel_CSV_stat_header(name_scene=None, x=0, y=0, nb_samples=-1):
+    """
+    create a csv file from a rawls repertory by indicating the pixel to study
+    """
     if name_scene not in scene_list:
         return render_template("error.html", error = errors[0])
     create_CSV(folder_rawls_path + "/" + name_scene,x,y,folder_rawls_path,nb_samples)
@@ -63,6 +74,9 @@ def pixel_CSV_stat_header(name_scene=None, x=0, y=0, nb_samples=-1):
 @app.route("/home")
 @app.route("/")
 def home():
+    """
+    
+    """
     img = request.args.get('img')
     xCoordinate = request.args.get('X-coordinate')
     yCoordinate = request.args.get('Y-coordinate')
@@ -97,6 +111,9 @@ def home():
 
 @app.route("/list")
 def list():
+    """
+    display a list of the rawls scene
+    """
     format = request.args.get('format')
     if format == "json":
         return redirect(url_for('json_list'))
@@ -104,11 +121,17 @@ def list():
 
 @app.route("/json_list")
 def json_list():
+    """
+    display a list of the rawls scene in json
+    """
     rawls_folders = {"rawls_folders" : scene_list}
     return jsonify(rawls_folders)
 
 @app.route("/<name_scene>/png/ref")
 def png(name_scene=None):
+    """"
+    display a png image from the rawls repertory
+    """
     if name_scene not in scene_list:
         return render_template("error.html", error = errors[0])
     save_png(name_scene)
@@ -117,10 +140,12 @@ def png(name_scene=None):
 @app.route("/<name_scene>/<int:x>/<int:y>")
 @app.route("/<name_scene>/<int:x>/<int:y>/<int:nb_samples>")
 def pixel_CSV_stat(name_scene=None, x=0, y=0, nb_samples=-1):
+    """
+    returns the statistics in json of the rawls directory indicating the pixel to study
+    """
     li = pixel_CSV_stat_header(name_scene, x, y, nb_samples)
     CSV_file = li[0]
     nb_samples = li[1]
-    # 
     analyse = Analyse(CSV_file)
     json_stat = analyse.infos()
     os.remove(CSV_file)
@@ -129,7 +154,9 @@ def pixel_CSV_stat(name_scene=None, x=0, y=0, nb_samples=-1):
 @app.route("/<name_scene>/<int:x1>-<int:x2>/<int:y1>-<int:y2>")
 @app.route("/<name_scene>/<int:x1>-<int:x2>/<int:y1>-<int:y2>/<int:nb_samples>")
 def area_CSV_stat(name_scene=None, x1=0, y1=0,x2=1,y2=0, nb_samples=-1):
-
+    """
+    returns the statistics in json of the rawls directory indicating the area of the pixels to study
+    """
     pwd = os.getcwd()
     if name_scene not in scene_list:
         return render_template("error.html", error = errors[0])
@@ -147,13 +174,6 @@ def area_CSV_stat(name_scene=None, x1=0, y1=0,x2=1,y2=0, nb_samples=-1):
     json_stat = analyse.infos()
     os.remove(CSV_file)
     return jsonify(json_stat)
-
-@app.route("/test")
-def test(name_scene=None):
-    p = "/home/theo/rawls/images/p3d_bathroom-view0_200_200.csv"
-    analyse = Analyse(p)
-    json_stat = analyse.infos()
-    return json_stat
 
 if __name__ == "__main__":
     with open('./config.json', 'r') as f:
