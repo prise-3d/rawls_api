@@ -12,7 +12,12 @@ from MONarchy.MONarchy import MONarchy
 from MONarchy.Analyse import Analyse
 
 app = flask.Flask(__name__) 
-
+errors = ["ERROR : Your name of the scene doesn't exist"]
+with open('./config.json', 'r') as f:
+    config = json.load(f)
+    folder_rawls_path = config['path']
+    scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
+  
 def csv_footer(name_scene,tab,CSV_file,nb_samples,x,y,x2=None,y2=None):
     """
     remove the csv file and generate statistiques of this file
@@ -55,7 +60,7 @@ def resize_image(name_scene):
     res = [img_resize,original_image_width,original_image_height]
     return res
 
-def pixel_CSV_stat_header(name_scene, x, y, nb_samples):
+def pixel_CSV_stat_header(name_scene, x, y, nb_samples=-1):
     """
     create a csv file from a rawls repertory by indicating the pixel to study
     """
@@ -88,7 +93,7 @@ def up():
 @app.route("/")
 def home():
     """
-    
+    home page regroupe all function in one interface
     """
     img = request.args.get('img')
     xCoordinate = request.args.get('X-coordinate')
@@ -156,9 +161,6 @@ def pixel_CSV_stat(name_scene=None, x=0, y=0, nb_samples=-1):
     """
     returns the statistics in json of the rawls directory indicating the pixel to study
     """
-    print(type(x))
-    print(type(nb_samples))
-    print(nb_samples)
     li = pixel_CSV_stat_header(name_scene, x, y, nb_samples)
     CSV_file = li[0]
     nb_samples = li[1]
@@ -191,10 +193,4 @@ def area_CSV_stat(name_scene=None, x1=0, y1=0,x2=1,y2=0, nb_samples=-1):
     return jsonify(json_stat)
 
 if __name__ == "__main__":
-    errors = ["ERROR : Your name of the scene doesn't exist"]
-    with open('./config.json', 'r') as f:
-        config = json.load(f)
-        folder_rawls_path = config['path']
-        scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
-  
     app.run(debug=True)
