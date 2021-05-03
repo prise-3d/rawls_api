@@ -7,3 +7,4 @@ rawls
 PIL
 MONarchy
 pytest
+Flask-Testing

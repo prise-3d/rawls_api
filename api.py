@@ -11,7 +11,7 @@ from PIL import Image
 from MONarchy.MONarchy import MONarchy
 from MONarchy.Analyse import Analyse
 
-app = flask.Flask(__name__)
+app = flask.Flask(__name__) 
 
 def csv_footer(name_scene,tab,CSV_file,nb_samples,x,y,x2=None,y2=None):
     """
@@ -55,7 +55,7 @@ def resize_image(name_scene):
     res = [img_resize,original_image_width,original_image_height]
     return res
 
-def pixel_CSV_stat_header(name_scene=None, x=0, y=0, nb_samples=-1):
+def pixel_CSV_stat_header(name_scene, x, y, nb_samples):
     """
     create a csv file from a rawls repertory by indicating the pixel to study
     """
@@ -79,6 +79,9 @@ def up():
     Returns :
     {string} -- ok if API is up
     """
+    img = request.args.get('img')
+    if img != None:
+        return "yes"
     return "ok"
 
 @app.route("/home")
@@ -153,6 +156,9 @@ def pixel_CSV_stat(name_scene=None, x=0, y=0, nb_samples=-1):
     """
     returns the statistics in json of the rawls directory indicating the pixel to study
     """
+    print(type(x))
+    print(type(nb_samples))
+    print(nb_samples)
     li = pixel_CSV_stat_header(name_scene, x, y, nb_samples)
     CSV_file = li[0]
     nb_samples = li[1]
@@ -170,7 +176,6 @@ def area_CSV_stat(name_scene=None, x1=0, y1=0,x2=1,y2=0, nb_samples=-1):
     pwd = os.getcwd()
     if name_scene not in scene_list:
         return render_template("error.html", error = errors[0])
-    print("out : ",folder_rawls_path)
     create_CSV_zone(folder_rawls_path + "/" + name_scene,x1,y1,x2,y2,folder_rawls_path,nb_samples)
 
     os.chdir(pwd)
@@ -186,9 +191,10 @@ def area_CSV_stat(name_scene=None, x1=0, y1=0,x2=1,y2=0, nb_samples=-1):
     return jsonify(json_stat)
 
 if __name__ == "__main__":
+    errors = ["ERROR : Your name of the scene doesn't exist"]
     with open('./config.json', 'r') as f:
         config = json.load(f)
-    folder_rawls_path = config['path']
-    scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
-    errors = ["ERROR : Your name of the scene doesn't exist"]
+        folder_rawls_path = config['path']
+        scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
+  
     app.run(debug=True)
