@@ -26,7 +26,7 @@ $(document).ready(function() {
     })
 
     $("#scene-select").on('change', function() {
-        var url = "http://127.0.0.1:5000/home?img="+this.value;
+        var url = "http://127.0.0.1:5000/home?name_scene="+this.value;
         if(this.value == "default"){
             url = "http://127.0.0.1:5000/home"
         }
@@ -45,13 +45,17 @@ $(document).ready(function() {
 
         coordinate_form = "<div id='coordinate_form'><form action='' method='get' class='form-example'>"
         coordinate_form += "<div class='form-example'>"
-        coordinate_form +=  "<label for='X-coordinate'>Enter x coordinate : </label>"
+        coordinate_form +=  "<label for='X-coordinate'>Enter x coordinate : </label></br>"
         coordinate_form +=  "<input type='number' name='X-coordinate' id='X-coordinate' min='0' max='"+xMax+"' required></br>"
         coordinate_form += "<span id='x'></span></div>"
         coordinate_form += "<div class='form-example'>"
-        coordinate_form += "<label for='Y-coordinate'>Enter y coordinate: </label>"
+        coordinate_form += "<label for='Y-coordinate'>Enter y coordinate: </label></br>"
         coordinate_form += "<input type='number' name='Y-coordinate' id='Y-coordinate' min='0' max='"+yMax+"' required></br>"
         coordinate_form += "<span id='y'></span></div>"
+        coordinate_form += "<div class='form-example'>"
+        coordinate_form += "<label for='nb_samples'>Enter a number of samples we use (use all if not filled): </label></br>"
+        coordinate_form += "<input type='number' name='nb_samples' id='nb_samples' min='1'></br>"
+        coordinate_form += "<span id='samples'></span></div>"
         coordinate_form += "<div class='form-example'></div>"
         coordinate_form += "<input type='submit' value='get pixel stat'></div></form></div>"
         $("#information_image").append(coordinate_form)
@@ -59,7 +63,12 @@ $(document).ready(function() {
 
       $( "form" ).submit(function( event ) {
         event.preventDefault();
-        var url = "http://127.0.0.1:5000/home?img="+getUrlParameter('img')+"&X-coordinate="+$("#X-coordinate").val()+"&Y-coordinate="+$("#Y-coordinate").val();
+        alert("valeur : "+$("#nb_samples").val())
+        if($("#nb_samples").val() == ""){
+            var url = "http://127.0.0.1:5000/home?name_scene="+getUrlParameter('name_scene')+"&X-coordinate="+$("#X-coordinate").val()+"&Y-coordinate="+$("#Y-coordinate").val();
+        }else{
+            var url = "http://127.0.0.1:5000/home?name_scene="+getUrlParameter('name_scene')+"&X-coordinate="+$("#X-coordinate").val()+"&Y-coordinate="+$("#Y-coordinate").val()+"&nb_samples="+$("#nb_samples").val();
+        }
         $(location).attr('href',url);
         
       });
