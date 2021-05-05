@@ -1,3 +1,18 @@
 body{
     color:blue;
 }
+
+#Global{
+    width:100%;
+    display : flex;
+}
+#Global #gauche {
+    width:800px;
+}
+#Global #droite {
+    margin-left:5%   
+}
+
+.form-example{
+    margin-bottom:10px;
+}

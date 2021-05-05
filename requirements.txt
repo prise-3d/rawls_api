@@ -1,0 +1,6 @@
+flask
+rawls
+Pillow
+MONarchy
+pytest
+Flask-Testing
