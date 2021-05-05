@@ -403,4 +403,4 @@ def area_CSV_stat(name_scene, x1, y1,x2,y2, nb_samples=-1):
     return jsonify(json_stat)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5001, host='0.0.0.0')

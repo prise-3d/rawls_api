@@ -1,10 +1,6 @@
 flask
-json
-os
-sys
-csv
 rawls
-PIL
+Pillow
 MONarchy
 pytest
 Flask-Testing
