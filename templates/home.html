@@ -4,6 +4,35 @@
 {% endblock %}
 {% block content %}
     <h1>Home Page</h1>
-    <image src="{{ url_for('static', filename='images/output.png')}}">
-    <div id='information_image'></div>
+    <p>
+        <label for="scene-select">Choose a scene:</label>
+
+        <select name="scenes" id="scene-select">
+            <option value="default"> --Choose a scene-- </option>
+            {% for element in scenes %}
+                {% if name_scene == element %}
+                    <option value="{{ element }}" selected>{{ element }} </option>
+                {% else %}
+                    <option value="{{ element }}">{{ element }} </option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    </p>
+    <div id="Global">
+        <div id="gauche">
+            {% if image != None %}
+                <div id="image"><image src="{{ url_for('static', filename = image)}}">
+                    <p>original size : ({{original_image_width}}x{{original_image_height}})</p>
+                </div>
+            {% endif %}
+            <div id='information_image'></div>
+        </div>
+        <div id="droite">
+            {% if((xCoordinate != None) and (yCoordinate != None))%}
+                <p>scene : {{ name_scene }} on coordinate ({{ xCoordinate }},{{ yCoordinate }})</p>
+                <p>nb samples : {{ nb_samples }}</p>
+                <p>{{ json_stat }}</p>
+            {% endif %}
+        </div>
+    </div>
 {% endblock %}

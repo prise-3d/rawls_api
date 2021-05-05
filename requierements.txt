@@ -1,0 +1,10 @@
+flask
+json
+os
+sys
+csv
+rawls
+PIL
+MONarchy
+pytest
+Flask-Testing
