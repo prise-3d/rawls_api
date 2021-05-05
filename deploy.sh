@@ -1,4 +1,5 @@
 #!/bin/bash
+git pull origin main
 
 # construire l'image
 docker rmi -f api-rawls
