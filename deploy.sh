@@ -18,4 +18,4 @@ if [[ "$(docker ps -a | grep rawls_api_instance 2> /dev/null)" != "" ]]; then
     docker rm rawls_api_instance
 fi
 
-docker run --name rawls_api_instance -p 5001:5001 api-rawls
+docker run -d --name rawls_api_instance -p 5001:5001 api-rawls
