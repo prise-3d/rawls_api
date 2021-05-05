@@ -2,7 +2,8 @@ name: Release - Test, Build & Redeploy
 
 on:
   push:
-    branches:
+    # Sequence of patterns matched against refs/tags
+    tags:
       - 'v*'
 
 jobs:
