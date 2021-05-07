@@ -14,7 +14,11 @@ from rawls.utils import create_CSV, create_CSV_zone
 
 
 app = flask.Flask(__name__) 
-errors = ["ERROR : Your name of the scene doesn't exist","ERROR : coordinate too high, please enter a correct coordinate","ERROR : coordinate too low, please enter a correct coordinate"]
+errors = ["ERROR : Your name of the scene doesn't exist",
+"ERROR : coordinate too high, please enter a correct coordinate",
+"ERROR : coordinate too low, please enter a correct coordinate",
+"ERROR : not a correct argument",
+"ERROR : method of the request (GET/POST) doesn't good"]
 with open('./config.json', 'r') as f:
     config = json.load(f)
     folder_rawls_path = config['path']
@@ -85,23 +89,19 @@ def pixel_CSV_stat_header(name_scene, x, y, nb_samples=-1):
     res = [CSV_file,nb_samples]
     return res
 
-def area_CSV_stat_header(name_scene,x1,y1,x2,y2,nb_samples):
+def list_pixel_stat_header(name_scene,list_pix):
     """
-    create a csv file from a rawls repertory by indicating the area to study
+    return json stat of the list of the pixels
     """
-    pwd = os.getcwd()
-    if name_scene not in scene_list:
-        return render_template("error.html", error = errors[0])
-    create_CSV_zone(folder_rawls_path + "/" + name_scene,x1,y1,x2,y2,folder_rawls_path,nb_samples)
-
-    os.chdir(pwd)
-    if nb_samples == -1:
-        nb_samples = 0
-        for name in os.listdir(folder_rawls_path + "/" + name_scene):
-            if name.endswith(".rawls"):
-                nb_samples += 1
-    CSV_file = folder_rawls_path + "/" + name_scene + "_" + str(x1) + "_" + str(y1) + "_to_" + str(x2) + "_" + str(y2) + ".csv"
-    res = [CSV_file,nb_samples]
+    res = []
+    for coordinate in list_pix:
+        li = pixel_CSV_stat_header(name_scene,coordinate[0],coordinate[1])
+        CSV_file = li[0]
+        analyse = Analyse(CSV_file)
+        json_stat = analyse.infos()
+        os.remove(CSV_file)
+        res.append(json_stat)
+    
     return res
 
 @app.route("/up")  
@@ -342,65 +342,50 @@ def pixel_CSV_stat(name_scene, x, y, nb_samples=-1):
     os.remove(CSV_file)
     return jsonify(json_stat)
 
-@app.route("/<name_scene>/<int:x1>-<int:x2>/<int:y1>-<int:y2>")
-@app.route("/<name_scene>/<int:x1>-<int:x2>/<int:y1>-<int:y2>/<int:nb_samples>")
-def area_CSV_stat(name_scene, x1, y1,x2,y2, nb_samples=-1):
+@app.route("/<name_scene>")
+def list_pixel_stat(name_scene, methods = ['POST']):
     """
-    returns the statistics in json of the rawls directory indicating the area of the pixels to study
+    returns the statistics in json of the rawls directory indicating a list of the pixels to study
     ---
-    get:
-        description: get a statistiques of the area indicated of the rawls scene.
+    post:
+        description: get a statistiques of the list of pixels indicated of the rawls scene.
         parameters:
             - name: name_scene
                 in: path
                 description: name of the scene to study
                 type: string
                 required: true
-            - name: x1
-                in: path
-                description: horizontal coordinate of the top left corner of the area to study
-                type: integer
+            - json_file
+                in: parametres
+                description: json which contains a list of pixel
+                type: json
                 required: true
-            - name: x2
-                in: path
-                description: horizontal coordinate of the bottom right corner of the area to study
-                type: integer
-                required: true
-            - name: y1
-                in: path
-                description: vertical coordinate of the top left corner of the area to study
-                type: integer
-                required: true
-            - name: y2
-                in: path
-                description: vertical coordinate of the bottom right of the area to study
-                type: integer
-                required: true
-            - name: nb_samples
-                in: path
-                description: number of the samples we will use for the statistiques
-                type: integer
-                default: -1 (all samples in rawls repertory)
-                required: false
+                example : 
+                    {
+                        "pixels": [[8,4],[1,2]]
+                    }
         responses:
             200:
                 description:
-                    -return a json object with statistiques of the pixel study
-                    -return a error page if coordinate is not valid with argument :
-                        - {string} error : a sentence of the error
+                    -return a json object with statistiques of the list of the pixels study
+            405:
+                description:
+                    -method not allowed
             500:
                 description: 
                     -name of scene not found.
-                    -Exception: Unvalid number for a samples
-                    -Invalid coodinate : if (x1,y1) is more right and/or bottom than (x2,y2)
     """
-    li = area_CSV_stat_header(name_scene,x1,y1,x2,y2,nb_samples)
-    CSV_file = li[0]
-    nb_samples = li[1]
-    analyse = Analyse(CSV_file)
-    json_stat = analyse.infos()
-    os.remove(CSV_file)
-    return jsonify(json_stat)
+    if name_scene not in scene_list:
+        return render_template("error.html", error = errors[0])
+    if request.method == 'POST':
+        request_data = request.get_json()
+        if request_data:
+            if 'pixels' in request_data:
+                if (type(request_data['pixels']) == list) and (len(request_data['pixels']) > 0):
+                    json_stat = list_pixel_stat_header(name_scene,request_data['pixels'])
+                    return jsonify(json_stat)
+            return render_template("error.html", error = errors[3])
+    return render_template("error.html", error = errors[4])
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001, host='0.0.0.0')
