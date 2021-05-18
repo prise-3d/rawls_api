@@ -79,13 +79,13 @@ def pixel_CSV_stat_header(name_scene, x, y, nb_samples=-1):
         return errors[1]
     if (x < 0) or (y < 0):
         return errors[2]
-    create_CSV(folder_rawls_path + "/" + name_scene,x,y,folder_rawls_path,nb_samples)
+    create_CSV(folder_rawls_path + "/" + name_scene,x,y,"/tmp",nb_samples)
     if nb_samples == -1:
         nb_samples = 0
         for name in os.listdir(folder_rawls_path + "/" + name_scene):
             if name.endswith(".rawls"):
                 nb_samples += 1
-    CSV_file = folder_rawls_path + "/" + name_scene + "_" + str(x) + "_" + str(y) + ".csv"
+    CSV_file = "/tmp/" + name_scene + "_" + str(x) + "_" + str(y) + ".csv"
     res = [CSV_file,nb_samples]
     return res
 
@@ -293,7 +293,7 @@ def png(name_scene=None):
 
 @app.route("/<name_scene>/<int:x>/<int:y>")
 @app.route("/<name_scene>/<int:x>/<int:y>/<int:nb_samples>")
-def pixel_CSV_stat(name_scene, x, y, nb_samples=-1):
+def pixel_CSV_stat(name_scene, x, y, nb_samples=50):
     """
     returns the statistics in json of the rawls directory indicating the pixel to study.
     ---
