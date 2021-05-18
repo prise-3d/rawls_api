@@ -72,11 +72,11 @@ def pixel_CSV_stat_header(name_scene, x, y, nb_samples=-1):
     """
     if name_scene not in scene_list:
         return errors[0]
-    save_png(name_scene)
-    im = Image.open("static/images/" + name_scene + ".png")
-    original_image_width,original_image_height = im.size
-    if (original_image_width < x) or (original_image_height < y):
-        return errors[1]
+    # save_png(name_scene)
+    # im = Image.open("static/images/" + name_scene + ".png")
+    # original_image_width,original_image_height = im.size
+    # if (original_image_width < x) or (original_image_height < y):
+    #     return errors[1]
     if (x < 0) or (y < 0):
         return errors[2]
     create_CSV(folder_rawls_path + "/" + name_scene,x,y,"/tmp",nb_samples)
