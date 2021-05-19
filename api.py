@@ -7,6 +7,7 @@ import os,sys
 # modules import
 from PIL import Image
 from flask import Flask, render_template, jsonify, request, redirect, url_for
+from flask_cors import CORS
 from MONarchy.MONarchy import MONarchy
 from MONarchy.Analyse import Analyse
 from rawls.rawls import Rawls
@@ -14,14 +15,18 @@ from rawls.utils import create_CSV, create_CSV_zone
 
 
 app = flask.Flask(__name__) 
+CORS(app)
+
 errors = ["ERROR : Your name of the scene doesn't exist",
 "ERROR : coordinate too high, please enter a correct coordinate",
 "ERROR : coordinate too low, please enter a correct coordinate",
 "ERROR : not a correct argument",
-"ERROR : method of the request (GET/POST) doesn't good"]
+"ERROR : method of the request (GET/POST) doesn't good",
+"ERROR : image not found"]
 with open('./config.json', 'r') as f:
     config = json.load(f)
     folder_rawls_path = config['path']
+    images_path = config['images_path']
     scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
   
 def csv_footer(name_scene,tab,CSV_file,nb_samples,x,y,x2=None,y2=None):
@@ -52,6 +57,18 @@ def save_png(name_scene):
         rawls_img = Rawls.load(folder_rawls_path + "/" + name_scene + "/" + first_file)
         rawls_img.save("static/images/" + name_scene + ".png")
 
+def search_png(name_scene):
+    """
+    search a png image from the image repertory
+    Returns :
+        {json} -- path of the image if found.
+        {json} -- error if not found.
+    """
+    path = os.path.join(images_path,name_scene+".png")
+    if os.path.exists(path):
+        return {"image_path":path}
+    return {"error":errors[5]}
+
 def resize_image(name_scene):
     """
     save a png image with size (300,300) from a rawls repertory for display in website
@@ -71,14 +88,17 @@ def pixel_CSV_stat_header(name_scene, x, y, nb_samples=-1):
     create a csv file from a rawls repertory by indicating the pixel to study
     """
     if name_scene not in scene_list:
-        return errors[0]
-    # save_png(name_scene)
-    # im = Image.open("static/images/" + name_scene + ".png")
-    # original_image_width,original_image_height = im.size
-    # if (original_image_width < x) or (original_image_height < y):
-    #     return errors[1]
+        return {"error":errors[0]}
+    json = search_png(name_scene)
+    for key in json.keys():
+        if key == "error":
+            return json
+    im = Image.open(os.path.join(images_path,name_scene+".png"))
+    original_image_width,original_image_height = im.size
+    if (original_image_width < x) or (original_image_height < y):
+        return {"error":errors[1]}
     if (x < 0) or (y < 0):
-        return errors[2]
+        return {"error":errors[2]}
     create_CSV(folder_rawls_path + "/" + name_scene,x,y,"/tmp",nb_samples)
     if nb_samples == -1:
         nb_samples = 0
@@ -96,6 +116,8 @@ def list_pixel_stat_header(name_scene,list_pix):
     res = []
     for coordinate in list_pix:
         li = pixel_CSV_stat_header(name_scene,coordinate[0],coordinate[1])
+        if isinstance(li,dict):
+                return li
         CSV_file = li[0]
         analyse = Analyse(CSV_file)
         json_stat = analyse.infos()
@@ -104,18 +126,19 @@ def list_pixel_stat_header(name_scene,list_pix):
     
     return res
 
-@app.route("/up")  
+@app.route("/up")
 def up():
     """
     Just for test if API is up
 
     Returns :
     {string} -- ok if API is up
+    {string} -- yes if API is up with argument in URL
     """
     img = request.args.get('img')
     if img != None:
         return "yes"
-    return "ok"
+    return jsonify("ok")
 
 @app.route("/home")
 @app.route("/")
@@ -192,65 +215,38 @@ def home():
                 nb_samples = -1
             nb_samples = int(nb_samples)
             li = pixel_CSV_stat_header(name_scene,xCoordinate,yCoordinate,nb_samples)
-            if isinstance(li,str):
-                return render_template("error.html", error = li)
+            if isinstance(li,dict):
+                return jsonify(li)
             nb_samples = li[1]
             analyse = Analyse(li[0])
             json_stat = analyse.infos()
             os.remove(li[0])
-            return render_template("home.html",
-                scenes = scene_list,
-                name_scene = name_scene,
-                image = link_img,
-                original_image_width = original_image_width,
-                original_image_height = original_image_height,
-                xCoordinate = xCoordinate,
-                yCoordinate = yCoordinate,
-                nb_samples = nb_samples,
-                json_stat = json_stat)
-        return render_template("home.html",
-            scenes = scene_list,
-            name_scene = name_scene,
-            image = link_img,
-            original_image_width = original_image_width,
-            original_image_height = original_image_height,
-            xCoordinate = xCoordinate,
-            yCoordinate = yCoordinate)
-    return render_template("home.html",
-        scenes = scene_list,
-        name_scene = name_scene,
-        xCoordinate = xCoordinate,
-        yCoordinate = yCoordinate)
+            return jsonify({
+                "scenes": scene_list,
+                "name_scene": name_scene,
+                "image": link_img,
+                "original_image_width": original_image_width,
+                "original_image_height": original_image_height,
+                "xCoordinate": xCoordinate,
+                "yCoordinate": yCoordinate,
+                "nb_samples": nb_samples,
+                "json_stat": json_stat})
+        return jsonify({
+            "scenes": scene_list,
+            "name_scene": name_scene,
+            "image": link_img,
+            "original_image_width": original_image_width,
+            "original_image_height": original_image_height,
+            "xCoordinate": xCoordinate,
+            "yCoordinate": yCoordinate})
+    return jsonify({
+        "scenes": scene_list,
+        "name_scene": name_scene,
+        "xCoordinate": xCoordinate,
+        "yCoordinate": yCoordinate})
 
 @app.route("/list")
 def list():
-    """
-    display a list of the rawls scene.
-    ---
-    get:
-        description: Get a list of rawls scene.
-        parameters:
-            - name: format
-                in: parametres
-                description: format output (json)
-                type: string
-                required: false
-        responses:
-            200:
-                description: 
-                    -list page to be returned with argument :
-                        -scenes : {[string]} list of scenes
-            302:
-                description:
-                    -if format = json, redirect url to '/json_list'
-    """
-    format = request.args.get('format')
-    if format == "json":
-        return redirect(url_for('json_list'))
-    return render_template("list.html",scenes = scene_list)
-
-@app.route("/json_list")
-def json_list():
     """
     display a list of the rawls scene in json.
     ---
@@ -267,10 +263,10 @@ def json_list():
 @app.route("/<name_scene>/png/ref")
 def png(name_scene=None):
     """"
-    display a png image from the rawls repertory
+    display a png image from the config.json repertory
     ---
     get:
-        description: Get a single foo with the bar ID.
+        description: Get the path of the png image of the scene
         parameters:
             - name: name_scene
                 in: path
@@ -280,16 +276,11 @@ def png(name_scene=None):
         responses:
             200:
                 description: 
-                    -return a png_image page with arguments :
-                        -name_scene: {string} name of the scene
-                        -image_png: {string} path of the png image
-                    -return a error page if coordinate is not valid with argument :
-                        - {string} error : a sentence of the error
+                    -return a json object
     """
     if name_scene not in scene_list:
-        return render_template("error.html", error = errors[0])
-    save_png(name_scene)
-    return render_template("png_image.html",name_scene = name_scene, image_png = "images/"+name_scene+".png")
+        return jsonify({"error": errors[0]})
+    return jsonify(search_png(name_scene))
 
 @app.route("/<name_scene>/<int:x>/<int:y>")
 @app.route("/<name_scene>/<int:x>/<int:y>/<int:nb_samples>")
@@ -325,16 +316,15 @@ def pixel_CSV_stat(name_scene, x, y, nb_samples=50):
             200:
                 description:
                     -return a json object with statistiques of the pixel study
-                    -return a error page if coordinate is not valid with argument :
-                        - {string} error : a sentence of the error
+                    -return a json object with error
             500:
                 description: 
                     -name of scene not found.
                     -Exception: Unvalid number for a samples
     """
     li = pixel_CSV_stat_header(name_scene, x, y, nb_samples)
-    if isinstance(li,str):
-        return render_template("error.html", error = li)
+    if isinstance(li,dict):
+        return jsonify(li)
     CSV_file = li[0]
     nb_samples = li[1]
     analyse = Analyse(CSV_file)
@@ -376,7 +366,7 @@ def list_pixel_stat(name_scene, methods = ['POST']):
                     -name of scene not found.
     """
     if name_scene not in scene_list:
-        return render_template("error.html", error = errors[0])
+        return jsonify({"error": errors[0]})
     if request.method == 'POST':
         request_data = request.get_json()
         if request_data:
@@ -384,8 +374,8 @@ def list_pixel_stat(name_scene, methods = ['POST']):
                 if (type(request_data['pixels']) == list) and (len(request_data['pixels']) > 0):
                     json_stat = list_pixel_stat_header(name_scene,request_data['pixels'])
                     return jsonify(json_stat)
-            return render_template("error.html", error = errors[3])
-    return render_template("error.html", error = errors[4])
+            return jsonify({"error": errors[3]})
+    return jsonify({"error": errors[4]})
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001, host='0.0.0.0')

@@ -1,3 +1,4 @@
 {
-	"path":"/app/rawls"
+	"path":"./static/rawls",
+	"images_path":"./static/images"
 }
