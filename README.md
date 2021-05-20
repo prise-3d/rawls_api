@@ -1,8 +1,10 @@
 # rawls_api
 REST-API for Rawls consultation
-You must modif a json file which calls config.json where it contains the path of rawls repertories with the title of the datum "path".  For example :
+You must modif a json file which calls config.json where it contains the path of rawls repertories with the title of the datum "path" and the path of image repertories with a title of the datum "images_path".
+For example :
 {
-"path":"/home/theo/rawls/images"
+	"path":"./static/rawls",
+	"images_path":"./static/images"
 }
 
 Documentation of the route :
@@ -11,13 +13,14 @@ Documentation of the route :
 
     Returns :
     {string} -- ok if API is up
+    {string} -- yes if API is up with argument 'img' in URL
     
 @app.route("/home")
 @app.route("/")
     home page regroupe all functions in one interface
     ---
     get:
-        description: get a statistiques of the pixel of the rawls scene, display a png image, choose a scene to study.
+        description: get a json object withstatistiques of the pixel of the rawls scene, display a png image, choose a scene to study.
         parameters:
             - name: name_scene
                 in: arguments
@@ -37,7 +40,7 @@ Documentation of the route :
         responses:
             200:
                 description:
-                    -return a home page with arguments:
+                    -return a json object with arguments:
                         -scenes: {[string]} list of name of the scenes
                         -name_scene: {string} name of the scene to study
                         -image: {string} path of the png resize image
@@ -47,7 +50,7 @@ Documentation of the route :
                         -yCoordinate: {int} vertical coordinate of the pixel to study
                         -nb_samples: {int} number of the samples we will use for the statistiques
                         -json_stat: a json object with statistiques of the pixel study
-                    -return a home page with arguments:
+                    -return a json object with arguments:
                         -scenes: {[string]} list of name of the scenes
                         -name_scene: {string} name of the scene to study
                         -image: {string} path of the png resize image
@@ -55,7 +58,7 @@ Documentation of the route :
                         -original_image_height: {int} height of the png image of the scene
                         -xCoordinate: {int} horizontal coordinate of the pixel to study
                         -yCoordinate: {int} vertical coordinate of the pixel to study
-                    -return a home page with arguments:
+                    -return a json object with arguments:
                         -scenes: {[string]} list of name of the scenes
                         -name_scene: {string} name of the scene to study
                         -xCoordinate: {int} horizontal coordinate of the pixel to study
@@ -68,30 +71,8 @@ Documentation of the route :
             500:
                 description:
                     -we don't use X-coordinate and/or Y-coordinate and/or nb_samples as an integer
-   
+
 @app.route("/list")
-
-    display a list of the rawls scene.
-    ---
-    get:
-        description: Get a list of rawls scene.
-        parameters:
-            - name: format
-                in: parametres
-                description: format output (json)
-                type: string
-                required: false
-        responses:
-            200:
-                description: 
-                    -list page to be returned with argument :
-                        -scenes : {[string]} list of scenes
-            302:
-                description:
-                    -if format = json, redirect url to '/json_list'
-
-@app.route("/json_list")
-
     display a list of the rawls scene in json.
     ---
     get:
@@ -101,13 +82,11 @@ Documentation of the route :
             200:
                 description: json object to be returned.
 
-
 @app.route("/<name_scene>/png/ref")
-
-    display a png image from the rawls repertory
+    display a png image from the config.json repertory
     ---
     get:
-        description: Get a single foo with the bar ID.
+        description: Get the path of the png image of the scene
         parameters:
             - name: name_scene
                 in: path
@@ -117,15 +96,11 @@ Documentation of the route :
         responses:
             200:
                 description: 
-                    -return a png_image page with arguments :
-                        -name_scene: {string} name of the scene
-                        -image_png: {string} path of the png image
-                    -return a error page if coordinate is not valid with argument :
-                        - {string} error : a sentence of the error
+                    -return a json object
 
 @app.route("/<name_scene>/<int:x>/<int:y>")
 @app.route("/<name_scene>/<int:x>/<int:y>/<int:nb_samples>")
-
+    """
     returns the statistics in json of the rawls directory indicating the pixel to study.
     ---
     get:
@@ -150,18 +125,13 @@ Documentation of the route :
                 in: path
                 description: number of the samples we will use for the statistiques
                 type: integer
-                default: -1 (all samples in rawls repertory)
+                default: 50
                 required: false
         responses:
             200:
                 description:
                     -return a json object with statistiques of the pixel study
-                    -return a error page if coordinate is not valid with argument :
-                        - {string} error : a sentence of the error
-            500:
-                description: 
-                    -name of scene not found.
-                    -Exception: Unvalid number for a samples
+                    -return a json object with error
 
 @app.route("/<name_scene>/<int:x1>-<int:x2>/<int:y1>-<int:y2>")
 @app.route("/<name_scene>/<int:x1>-<int:x2>/<int:y1>-<int:y2>/<int:nb_samples>")

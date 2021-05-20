@@ -133,11 +133,11 @@ def up():
 
     Returns :
     {string} -- ok if API is up
-    {string} -- yes if API is up with argument in URL
+    {string} -- yes if API is up with argument 'img' in URL
     """
     img = request.args.get('img')
     if img != None:
-        return "yes"
+        return jsonify("yes")
     return jsonify("ok")
 
 @app.route("/home")
@@ -147,7 +147,7 @@ def home():
     home page regroupe all functions in one interface
     ---
     get:
-        description: get a statistiques of the pixel of the rawls scene, display a png image, choose a scene to study.
+        description: get a json object withstatistiques of the pixel of the rawls scene, display a png image, choose a scene to study.
         parameters:
             - name: name_scene
                 in: arguments
@@ -167,7 +167,7 @@ def home():
         responses:
             200:
                 description:
-                    -return a home page with arguments:
+                    -return a json object with arguments:
                         -scenes: {[string]} list of name of the scenes
                         -name_scene: {string} name of the scene to study
                         -image: {string} path of the png resize image
@@ -177,7 +177,7 @@ def home():
                         -yCoordinate: {int} vertical coordinate of the pixel to study
                         -nb_samples: {int} number of the samples we will use for the statistiques
                         -json_stat: a json object with statistiques of the pixel study
-                    -return a home page with arguments:
+                    -return a json object with arguments:
                         -scenes: {[string]} list of name of the scenes
                         -name_scene: {string} name of the scene to study
                         -image: {string} path of the png resize image
@@ -185,7 +185,7 @@ def home():
                         -original_image_height: {int} height of the png image of the scene
                         -xCoordinate: {int} horizontal coordinate of the pixel to study
                         -yCoordinate: {int} vertical coordinate of the pixel to study
-                    -return a home page with arguments:
+                    -return a json object with arguments:
                         -scenes: {[string]} list of name of the scenes
                         -name_scene: {string} name of the scene to study
                         -xCoordinate: {int} horizontal coordinate of the pixel to study
@@ -310,17 +310,13 @@ def pixel_CSV_stat(name_scene, x, y, nb_samples=50):
                 in: path
                 description: number of the samples we will use for the statistiques
                 type: integer
-                default: -1 (all samples in rawls repertory)
+                default: 50
                 required: false
         responses:
             200:
                 description:
                     -return a json object with statistiques of the pixel study
                     -return a json object with error
-            500:
-                description: 
-                    -name of scene not found.
-                    -Exception: Unvalid number for a samples
     """
     li = pixel_CSV_stat_header(name_scene, x, y, nb_samples)
     if isinstance(li,dict):
