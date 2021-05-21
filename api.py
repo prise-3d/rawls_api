@@ -1,4 +1,5 @@
 # main import
+from typing import List
 import flask
 import json
 import csv
@@ -246,7 +247,7 @@ def home():
         "yCoordinate": yCoordinate})
 
 @app.route("/list")
-def list():
+def json_list():
     """
     display a list of the rawls scene in json.
     ---
