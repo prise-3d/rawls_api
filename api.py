@@ -8,7 +8,7 @@ import os,sys
 # modules import
 from PIL import Image
 from flask import Flask, render_template, jsonify, request, redirect, url_for
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from MONarchy.MONarchy import MONarchy
 from MONarchy.Analyse import Analyse
 from rawls.rawls import Rawls
@@ -16,7 +16,15 @@ from rawls.utils import create_CSV, create_CSV_zone
 
 
 app = flask.Flask(__name__) 
-CORS(app)
+
+
+api_v1_cors_config = {
+  "origins": ["*"],
+  "methods": ["OPTIONS", "GET", "POST", "PUT", "DELETE"],
+  "allow_headers": ["Authorization", "Access-Control-Allow-Origin", "content-type"]
+}
+CORS(app, resources={"/*": api_v1_cors_config})
+
 
 errors = ["ERROR : Your name of the scene doesn't exist",
 "ERROR : coordinate too high, please enter a correct coordinate",
@@ -329,7 +337,8 @@ def pixel_CSV_stat(name_scene, x, y, nb_samples=50):
     os.remove(CSV_file)
     return jsonify(json_stat)
 
-@app.route("/<name_scene>")
+@app.route("/stats_list/<name_scene>")
+@cross_origin()
 def list_pixel_stat(name_scene, methods = ['POST']):
     """
     returns the statistics in json of the rawls directory indicating a list of the pixels to study
