@@ -1,5 +1,4 @@
 # main import
-from typing import List
 import flask
 import json
 import csv
@@ -118,13 +117,13 @@ def pixel_CSV_stat_header(name_scene, x, y, nb_samples=-1):
     res = [CSV_file,nb_samples]
     return res
 
-def list_pixel_stat_header(name_scene,list_pix):
+def list_pixel_stat_header(name_scene,list_pix,nb_samples):
     """
     return json stat of the list of the pixels
     """
     res = []
     for coordinate in list_pix:
-        li = pixel_CSV_stat_header(name_scene,coordinate[0],coordinate[1])
+        li = pixel_CSV_stat_header(name_scene,coordinate[0],coordinate[1], nb_samples)
         if isinstance(li,dict):
                 return li
         CSV_file = li[0]
@@ -337,9 +336,10 @@ def pixel_CSV_stat(name_scene, x, y, nb_samples=50):
     os.remove(CSV_file)
     return jsonify(json_stat)
 
-@app.route("/stats_list/<name_scene>")
+@app.route("/stats_list/<name_scene>", methods = ['POST'])
+@app.route("/stats_list/<name_scene>/<int:nb_samples>", methods = ['POST'])
 @cross_origin()
-def list_pixel_stat(name_scene, methods = ['POST']):
+def list_pixel_stat(name_scene,nb_samples=50):
     """
     returns the statistics in json of the rawls directory indicating a list of the pixels to study
     ---
@@ -360,6 +360,12 @@ def list_pixel_stat(name_scene, methods = ['POST']):
                     {
                         "pixels": [[8,4],[1,2]]
                     }
+            - name: nb_samples
+                in: path
+                description: number of the samples we will use for the statistiques
+                type: integer
+                default: 50
+                required: false
         responses:
             200:
                 description:
@@ -378,7 +384,7 @@ def list_pixel_stat(name_scene, methods = ['POST']):
         if request_data:
             if 'pixels' in request_data:
                 if (type(request_data['pixels']) == list) and (len(request_data['pixels']) > 0):
-                    json_stat = list_pixel_stat_header(name_scene,request_data['pixels'])
+                    json_stat = list_pixel_stat_header(name_scene,request_data['pixels'],nb_samples)
                     return jsonify(json_stat)
             return jsonify({"error": errors[3]})
     return jsonify({"error": errors[4]})
