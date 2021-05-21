@@ -4,3 +4,4 @@ Pillow
 MONarchy
 pytest
 Flask-Testing
+flask-cors
