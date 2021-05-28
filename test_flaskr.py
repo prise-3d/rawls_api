@@ -6,10 +6,12 @@ import os
 import tempfile,json
 
 import pytest
+import click
 
 class MyTest(TestCase):
     
     def create_app(self):
+        app.testing = True
         return app
 
     def test_up(self):

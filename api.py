@@ -3,6 +3,7 @@ import flask
 import json
 import csv
 import os,sys
+import argparse
 
 # modules import
 from PIL import Image
@@ -14,7 +15,7 @@ from rawls.rawls import Rawls
 from rawls.utils import create_CSV, create_CSV_zone
 
 
-app = flask.Flask(__name__) 
+app = flask.Flask(__name__)
 
 
 api_v1_cors_config = {
@@ -31,12 +32,52 @@ errors = ["ERROR : Your name of the scene doesn't exist",
 "ERROR : not a correct argument",
 "ERROR : method of the request (GET/POST) doesn't good",
 "ERROR : image not found"]
-with open('./config.json', 'r') as f:
-    config = json.load(f)
-    folder_rawls_path = config['path']
-    images_path = config['images_path']
-    scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
-  
+
+def file_path(string):
+    if os.path.isfile(string):
+        return string
+    else:
+        raise "Could not open/read file : " + string
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--config', type=file_path, help="json file for the config")
+
+args = vars(parser.parse_args())
+
+file = args['config']
+# print("TESTING : ",app.testing)
+
+# if(app.testing == True):
+#     with open("config-test.json", 'r') as f:
+#         print("yes")
+#         config = json.load(f)
+#         folder_rawls_path = config['path']
+#         images_path = config['images_path']
+#         scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
+# else :
+#     with open('./config.json', 'r') as f:
+#         print("no")
+#         config = json.load(f)
+#         folder_rawls_path = config['path']
+#         images_path = config['images_path']
+#         scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
+
+if(file != None):
+    with open(file, 'r') as f:
+        print("yes")
+        config = json.load(f)
+        folder_rawls_path = config['path']
+        images_path = config['images_path']
+        scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
+else :
+    with open('./config.json', 'r') as f:
+        print("no")
+        config = json.load(f)
+        folder_rawls_path = config['path']
+        images_path = config['images_path']
+        scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
+
 def csv_footer(name_scene,tab,CSV_file,nb_samples,x,y,x2=None,y2=None):
     """
     remove the csv file and generate statistiques of this file
