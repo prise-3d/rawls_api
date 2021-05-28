@@ -7,7 +7,7 @@ import argparse
 
 # modules import
 from PIL import Image
-from flask import Flask, render_template, jsonify, request, redirect, url_for
+from flask import Flask, render_template, jsonify, request, redirect, url_for, send_file
 from flask_cors import CORS, cross_origin
 from MONarchy.MONarchy import MONarchy
 from MONarchy.Analyse import Analyse
@@ -329,7 +329,8 @@ def png(name_scene=None):
     """
     if name_scene not in scene_list:
         return jsonify({"error": errors[0]})
-    return jsonify(search_png(name_scene))
+    # return jsonify(search_png(name_scene))
+    return send_file(os.path.join(images_path,name_scene+".png"), mimetype='image')
 
 @app.route("/<name_scene>/<int:x>/<int:y>")
 @app.route("/<name_scene>/<int:x>/<int:y>/<int:nb_samples>")
