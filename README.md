@@ -183,3 +183,8 @@ Documentation of the route :
                     -name of scene not found.
                     -Exception: Unvalid number for a samples
                     -Invalid coodinate : if (x1,y1) is more right and/or bottom than (x2,y2)
+
+## Changelog version
+
+### 1.0.2
+- bugfix : write temp csv on /tmp 
