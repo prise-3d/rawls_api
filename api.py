@@ -69,6 +69,7 @@ if(file != None):
         config = json.load(f)
         folder_rawls_path = config['path']
         images_path = config['images_path']
+        version = config['version']
         scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
 else :
     with open('./config.json', 'r') as f:
@@ -76,6 +77,7 @@ else :
         config = json.load(f)
         folder_rawls_path = config['path']
         images_path = config['images_path']
+        version = config['version']
         scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
 
 def csv_footer(name_scene,tab,CSV_file,nb_samples,x,y,x2=None,y2=None):
@@ -181,13 +183,16 @@ def up():
     Just for test if API is up
 
     Returns :
-    {string} -- ok if API is up
+    {string} -- show version if API is up
     {string} -- yes if API is up with argument 'img' in URL
     """
     img = request.args.get('img')
     if img != None:
         return jsonify("yes")
-    return jsonify("ok")
+    
+    return jsonify({
+        "version": version
+    })
 
 @app.route("/home")
 @app.route("/")

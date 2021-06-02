@@ -1,4 +1,5 @@
 {
 	"path":"./static/rawls",
-	"images_path":"./static/images"
+	"images_path":"./static/images",
+	"version": "1.1.7"
 }
