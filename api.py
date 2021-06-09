@@ -4,6 +4,7 @@ import json
 import csv
 import os,sys
 import argparse
+import re
 
 # modules import
 from PIL import Image
@@ -69,7 +70,6 @@ if(file != None):
         config = json.load(f)
         folder_rawls_path = config['path']
         images_path = config['images_path']
-        version = config['version']
         scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
 else :
     with open('./config.json', 'r') as f:
@@ -77,7 +77,6 @@ else :
         config = json.load(f)
         folder_rawls_path = config['path']
         images_path = config['images_path']
-        version = config['version']
         scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
 
 def csv_footer(name_scene,tab,CSV_file,nb_samples,x,y,x2=None,y2=None):
@@ -189,7 +188,8 @@ def up():
     img = request.args.get('img')
     if img != None:
         return jsonify("yes")
-    
+    # The full version, including alpha/beta/rc tags.
+    version = re.sub('^v', '', os.popen('git describe --tag').read().strip()) 
     return jsonify({
         "version": version
     })
@@ -317,7 +317,7 @@ def json_list():
 @app.route("/<name_scene>/png/ref")
 def png(name_scene=None):
     """"
-    display a png image from the config.json repertory
+    display a png image from the config.json repertory or path of the png image
     ---
     get:
         description: Get the path of the png image of the scene
@@ -330,11 +330,10 @@ def png(name_scene=None):
         responses:
             200:
                 description: 
-                    -return a json object
+                    -return a image object
     """
     if name_scene not in scene_list:
         return jsonify({"error": errors[0]})
-    # return jsonify(search_png(name_scene))
     return send_file(os.path.join(images_path,name_scene+".png"), mimetype='image')
 
 @app.route("/<name_scene>/<int:x>/<int:y>")
