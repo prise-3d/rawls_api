@@ -4,6 +4,7 @@ import json
 import csv
 import os,sys
 import argparse
+import re
 
 # modules import
 from PIL import Image
@@ -181,13 +182,17 @@ def up():
     Just for test if API is up
 
     Returns :
-    {string} -- ok if API is up
+    {string} -- show version if API is up
     {string} -- yes if API is up with argument 'img' in URL
     """
     img = request.args.get('img')
     if img != None:
         return jsonify("yes")
-    return jsonify("ok")
+    # The full version, including alpha/beta/rc tags.
+    version = re.sub('^v', '', os.popen('git describe --tag').read().strip()) 
+    return jsonify({
+        "version": version
+    })
 
 @app.route("/home")
 @app.route("/")
@@ -312,7 +317,7 @@ def json_list():
 @app.route("/<name_scene>/png/ref")
 def png(name_scene=None):
     """"
-    display a png image from the config.json repertory
+    display a png image from the config.json repertory or path of the png image
     ---
     get:
         description: Get the path of the png image of the scene
@@ -325,11 +330,10 @@ def png(name_scene=None):
         responses:
             200:
                 description: 
-                    -return a json object
+                    -return a image object
     """
     if name_scene not in scene_list:
         return jsonify({"error": errors[0]})
-    # return jsonify(search_png(name_scene))
     return send_file(os.path.join(images_path,name_scene+".png"), mimetype='image')
 
 @app.route("/<name_scene>/<int:x>/<int:y>")
