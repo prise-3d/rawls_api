@@ -66,14 +66,12 @@ file = args['config']
 
 if(file != None):
     with open(file, 'r') as f:
-        print("yes")
         config = json.load(f)
         folder_rawls_path = config['path']
         images_path = config['images_path']
         scene_list = [ f for f in os.listdir(folder_rawls_path) if os.path.isdir(os.path.join(folder_rawls_path,f)) ]
 else :
     with open('./config.json', 'r') as f:
-        print("no")
         config = json.load(f)
         folder_rawls_path = config['path']
         images_path = config['images_path']
