@@ -5,15 +5,18 @@ import csv
 import os,sys
 import argparse
 import re
+import io
 
 # modules import
 from PIL import Image
+from base64 import encodebytes
 from flask import Flask, render_template, jsonify, request, redirect, url_for, send_file
 from flask_cors import CORS, cross_origin
 from MONarchy.MONarchy import MONarchy
 from MONarchy.Analyse import Analyse
 from rawls.rawls import Rawls
 from rawls.utils import create_CSV, create_CSV_zone
+import tempfile
 
 
 app = flask.Flask(__name__)
@@ -173,6 +176,12 @@ def list_pixel_stat_header(name_scene,list_pix,nb_samples):
         res.append(json_stat)
     
     return res
+def get_response_image(image_path):
+    pil_img = Image.open(image_path, mode='r') # reads the PIL image
+    byte_arr = io.BytesIO()
+    pil_img.save(byte_arr, format='PNG') # convert the PIL image to byte array
+    encoded_img = encodebytes(byte_arr.getvalue()).decode('ascii') # encode as base64
+    return encoded_img
 
 @app.route("/up")
 def up():
@@ -377,7 +386,18 @@ def pixel_CSV_stat(name_scene, x, y, nb_samples=50):
     nb_samples = li[1]
     analyse = Analyse(CSV_file)
     json_stat = analyse.infos()
+    analyse.save_graph(str(x)+"_"+str(y)+"_R",os.path.join("static","images","graph1.png"))
+    analyse.save_graph(str(x)+"_"+str(y)+"_G",os.path.join("static","images","graph2.png"))
+    analyse.save_graph(str(x)+"_"+str(y)+"_B",os.path.join("static","images","graph3.png"))
+    encoded_img = []
+    encoded_img.append(get_response_image(os.path.join("static","images","graph1.png")))
+    encoded_img.append(get_response_image(os.path.join("static","images","graph2.png")))
+    encoded_img.append(get_response_image(os.path.join("static","images","graph3.png")))
+    json_stat = json_stat[:-1:]+",[\""+encoded_img[0]+"\",\""+encoded_img[1]+"\",\""+encoded_img[2]+"\"]]"
     os.remove(CSV_file)
+    os.remove(os.path.join("static","images","graph1.png"))
+    os.remove(os.path.join("static","images","graph2.png"))
+    os.remove(os.path.join("static","images","graph3.png"))
     return jsonify(json_stat)
 
 @app.route("/stats_list/<name_scene>", methods = ['POST'])
