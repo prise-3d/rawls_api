@@ -18,6 +18,10 @@ from rawls.rawls import Rawls
 from rawls.utils import create_CSV, create_CSV_zone
 import tempfile
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 
 app = flask.Flask(__name__)
 
